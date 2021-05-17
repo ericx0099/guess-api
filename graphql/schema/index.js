@@ -22,6 +22,9 @@ module.exports = buildSchema(`
             country: Country!
             games: [Game!]
             questions: [Question!]
+            isAdmin: Boolean!
+            createdAt: String!
+            updatedAt: String!
         }
         
         type Answer {
@@ -57,19 +60,25 @@ module.exports = buildSchema(`
         input CountryInput {
             name: String!
         }
-        
+  
+  
         input UserInput{
             email: String!
             password: String!
             username: String!
+            isAdmin: Boolean!
         }
         
         input AnswerInput{
             user_id: Int!
         }
+      
         type RootQuery{
-            games: [Game!]!
+            games: [Game!]! 
             login(email: String!, password: String!): AuthData!
+            countries: [Country!]!
+            country(_id:String): Country!
+         
         }
         
         type RootMutation{

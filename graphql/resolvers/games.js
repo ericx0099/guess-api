@@ -2,8 +2,6 @@ const bcrypt = require("bcryptjs");
 
 const Game = require("../../models/game");
 const User = require("../../models/user");
-const Answer = require("../../models/answer");
-const Country = require("../../models/country");
 const Question = require("../../models/question");
 const { transformGame } = require("./merge");
 var random = require("mongoose-simple-random");
@@ -23,6 +21,7 @@ module.exports = {
     if (!req.isAuth) {
       throw new Error("Unauthenticated");
     }
+
     const game = new Game({
       uniq_token: args.gameInput.uniq_token,
       creator: req.userId,

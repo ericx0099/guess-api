@@ -7,6 +7,10 @@ const userSchema = new Schema({
     type: String,
     required: true,
   },
+  isAdmin: {
+    type: Boolean,
+    required: true,
+  },
   password: {
     type: String,
     required: true,
@@ -38,5 +42,5 @@ const userSchema = new Schema({
       ref: "Question",
     },
   ],
-});
+}, {timestamps: true});
 module.exports = mongoose.model("User", userSchema);

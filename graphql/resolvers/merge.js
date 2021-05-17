@@ -122,6 +122,8 @@ const transformUser = (user) => {
     games: games.bind(this, user._doc.games),
     questions: questions.bind(this, user._doc.questions),
     password: null,
+    createdAt: new Date(user._doc.createdAt).toISOString(),
+    updatedAt: new Date(user._doc.updatedAt).toISOString(),
   };
 };
 

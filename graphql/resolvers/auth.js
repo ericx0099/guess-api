@@ -16,6 +16,7 @@ module.exports = {
           email: args.userInput.email,
           username: args.userInput.username,
           password: hashedPassword,
+          isAdmin: args.userInput.isAdmin
         });
         return user.save();
       })
