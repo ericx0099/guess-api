@@ -50,11 +50,19 @@ module.exports = {
       const result = await game.save();
       createdGame = transformGame(result);
 
-      creator.games.push(game);
+      creator.games.push(result);
       await creator.save();
       return createdGame;
     } catch (err) {
       throw err;
     }
   },
+  game: async (root, {_id}) => {
+    try {
+      const gameFound = await Game.findById(_id);
+      return transformGame(gameFound);
+    }catch(err){
+      throw err;
+    }
+  }
 };

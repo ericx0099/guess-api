@@ -22,6 +22,7 @@ module.exports = buildSchema(`
             country: Country!
             games: [Game!]
             questions: [Question!]
+            answers: [Answer!]!
             isAdmin: Boolean!
             createdAt: String!
             updatedAt: String!
@@ -33,6 +34,7 @@ module.exports = buildSchema(`
             question: Question!
             game: Game!
             user: User!
+            points: Int!
         }
         
         type Country {
@@ -60,7 +62,14 @@ module.exports = buildSchema(`
         input CountryInput {
             name: String!
         }
-  
+        
+        input AnswerInput {
+            answer: String!
+            question: String!,
+            user: String!
+            game: String!
+            points: Int!
+        }
   
         input UserInput{
             email: String!
@@ -68,9 +77,12 @@ module.exports = buildSchema(`
             username: String!
             isAdmin: Boolean!
         }
-        
-        input AnswerInput{
-            user_id: Int!
+    
+        input QuestionInput{
+            creator: String!
+            answer: String!
+            image_url: String!
+            text: String!
         }
       
         type RootQuery{
@@ -78,13 +90,19 @@ module.exports = buildSchema(`
             login(email: String!, password: String!): AuthData!
             countries: [Country!]!
             country(_id:String): Country!
-         
+            questions: [Question!]!
+            question(_id: String): Question!
+            answers: [Answer!]!
+            answer(_id:String): Answer!
+            game(_id: String): Game!
         }
         
         type RootMutation{
             createGame(gameInput: GameInput): Game
             createUser(userInput: UserInput): User
             createCountry(countryInput: CountryInput): Country
+            createQuestion(questionInput: QuestionInput): Question
+            createAnswer(answerInput: AnswerInput): Answer
         }
         schema {
             query: RootQuery

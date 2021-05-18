@@ -42,5 +42,11 @@ const userSchema = new Schema({
       ref: "Question",
     },
   ],
+  answers: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Answer"
+    }
+  ]
 }, {timestamps: true});
 module.exports = mongoose.model("User", userSchema);

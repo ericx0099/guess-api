@@ -6,7 +6,7 @@ const answerSchema = new Schema({
   answer: {
     type: Schema.Types.ObjectId,
     ref: "Country",
-    required: false,
+    required: true,
   },
   question: {
     type: Schema.Types.ObjectId,
@@ -20,6 +20,10 @@ const answerSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "User",
   },
+  points: {
+    type: Number,
+    required: true
+  }
 });
 
 module.exports = mongoose.model("Answer", answerSchema);
