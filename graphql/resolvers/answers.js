@@ -11,7 +11,7 @@ module.exports = {
             return transformAnswer(answer);
         });
     },
-    answer: async (root, {_id}) => {
+    answer: async ({_id}) => {
         try{
             const answerFound = await Answer.findById(_id);
             return transformAnswer(answerFound);

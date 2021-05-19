@@ -57,7 +57,7 @@ module.exports = {
       throw err;
     }
   },
-  game: async (root, {_id}) => {
+  game: async ({_id}) => {
     try {
       const gameFound = await Game.findById(_id);
       return transformGame(gameFound);

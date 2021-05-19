@@ -95,6 +95,8 @@ module.exports = buildSchema(`
             answers: [Answer!]!
             answer(_id:String): Answer!
             game(_id: String): Game!
+            user(_id:String): User!
+            me: User!
         }
         
         type RootMutation{

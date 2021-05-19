@@ -35,9 +35,12 @@ module.exports = {
       throw err;
     }
   },
-  country: async (root, {_id}) => {
+  country: async ({_id}) => {
     try{
-      const countryFound = await Country.findOne(_id);
+      const countryFound = await Country.findById(_id);
+      if(!countryFound){
+        throw new Error("Country not found");
+      }
       return transformCountry(countryFound);
     }catch(err){
       throw err;

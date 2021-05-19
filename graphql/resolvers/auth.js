@@ -45,4 +45,25 @@ module.exports = {
     );
     return { userId: user.id, token: token, tokenExpiration: 24 };
   },
+  user: async({_id}) => {
+    const user = await User.findById(_id);
+    if(!user){
+      throw new Error("User not found");
+    }
+    return transformUser(user);
+  },
+  me: async (args, req) => {
+    if(!req.isAuth){
+      throw new Error(req.isAuth);
+    }
+    try{
+      const user = await User.findById(req.userId);
+      if(!user){
+        throw new Error("Wrong Credentials/Token");
+      }
+      return transformUser(user);
+    }catch(err){
+      throw err;
+    }
+  }
 };

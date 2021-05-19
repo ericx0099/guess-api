@@ -13,7 +13,7 @@ module.exports = {
             throw err;
         }
     },
-    question: async (root, {_id}) => {
+    question: async ({_id}) => {
         try{
             const questionFound = Question.findById(_id);
             return transformQuestion(questionFound);
