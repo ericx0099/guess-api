@@ -54,7 +54,7 @@ module.exports = {
   },
   me: async (args, req) => {
     if(!req.isAuth){
-      throw new Error(req.isAuth);
+      throw new Error("Unauthenticated");
     }
     try{
       const user = await User.findById(req.userId);
