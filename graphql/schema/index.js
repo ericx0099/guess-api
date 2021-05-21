@@ -79,9 +79,8 @@ module.exports = buildSchema(`
         }
     
         input QuestionInput{
-            creator: String!
             answer: String!
-            image_url: String!
+            image_url: String
             text: String!
         }
       

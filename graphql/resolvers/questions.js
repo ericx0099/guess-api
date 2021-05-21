@@ -1,5 +1,6 @@
 const Question = require("../../models/question");
 const User = require("../../models/user");
+const Country = require("../../models/country");
 const { transformQuestion } = require("./merge");
 
 module.exports = {
@@ -27,7 +28,7 @@ module.exports = {
         }
         try{
             const answer = await Country.findById(args.questionInput.answer);
-            const creator = await Country.findById(args.questionInput.creator);
+            const creator = await User.findById(req.userId);
             const newQuestion = new Question({
                 creator: creator,
                 answer: answer,
