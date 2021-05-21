@@ -19,6 +19,10 @@ module.exports = {
     const country = new Country({
       name: args.countryInput.name,
     });
+    const tryCountry = await Country.findOne({name: country.name});
+    if(tryCountry){
+      throw new Error("This country already Exists");
+    }
     let createdCountry;
     try {
       const performer = await User.findById(req.userId);
