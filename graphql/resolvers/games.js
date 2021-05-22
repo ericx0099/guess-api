@@ -21,9 +21,17 @@ module.exports = {
     if (!req.isAuth) {
       throw new Error("Unauthenticated");
     }
+    let rand;
+    while(true){
+      rand = Math.floor(Math.random() * 10000000);
+      const tryGame = await Game.findOne({uniq_token: rand});
+      if(!tryGame){
+        break;
+      }
+    }
 
     const game = new Game({
-      uniq_token: args.gameInput.uniq_token,
+      uniq_token: rand,
       creator: req.userId,
     });
 
@@ -34,18 +42,8 @@ module.exports = {
         throw new Error("User not found!");
       }
       game.users.push(creator);
-      const questions = await Question.findRandom(
-        {},
-        {},
-        { limit: 10 },
-        function (err, questions) {
-          if (!err) {
-            questions.forEach(function (question) {
-              game.questions.push(question);
-            });
-          }
-        }
-      );
+      const number = await Question.countDocuments();
+      console.log(number);
 
       const result = await game.save();
       createdGame = transformGame(result);

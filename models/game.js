@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-var random = require("mongoose-simple-random");
+
 const Schema = mongoose.Schema;
 
 const gameSchema = new Schema(
@@ -7,6 +7,11 @@ const gameSchema = new Schema(
     uniq_token: {
       type: String,
       required: true,
+      unique: true,
+    },
+    current_question: {
+      type: "Number",
+      default: 0,
     },
     users: [
       {
@@ -33,5 +38,5 @@ const gameSchema = new Schema(
   },
   { timestamps: true }
 );
-gameSchema.plugin(random);
+
 module.exports = mongoose.model("Game", gameSchema);

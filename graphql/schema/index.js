@@ -99,7 +99,7 @@ module.exports = buildSchema(`
         }
         
         type RootMutation{
-            createGame(gameInput: GameInput): Game
+            createGame: Game
             createUser(userInput: UserInput): User
             createCountry(countryInput: CountryInput): Country
             createQuestion(questionInput: QuestionInput): Question
