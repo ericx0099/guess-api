@@ -96,6 +96,10 @@ module.exports = buildSchema(`
             game(_id: String): Game!
             user(_id:String): User!
             me: User!
+            gameByToken(token: String!): Game!
+            joinGame(user_id: String!, game_token: String!): Game!
+            users: [User!]!
+            canStart(user_id: String!, game_token: String!): Boolean!
         }
         
         type RootMutation{
