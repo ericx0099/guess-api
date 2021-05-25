@@ -99,29 +99,47 @@ io.on("connection", (socket) => {
     const query = {
       query: `
         query{
-            canStart(user_id: "60abc4d7337be843dcf292b7", game_token: "${params.game_token}")
+            canStart(user_id: "${params.user_id}", game_token: "${params.game_token}")
         }
     `,
     };
     axios
       .post("http://localhost:3000/api", query)
       .then((res) => {
-          if(res.data.data.canStart){
-            const query = {
-                query: `
-                    query{
-                        
+        if (res.data.data.canStart) {
+          const query = {
+            query: `
+                query{
+                    getQuestion(game_token: "${params.game_token}"){
+                        question_text
+                        question_id
+                        countries {
+                            name
+                            _id
+                        }
                     }
-                `
-            }
-          }
+                }
+            `,
+          };
+          axios
+            .post("http://localhost:3000/api", query)
+            .then((res) => {
+              if (res.data.data.getQuestion) {
+                io.sockets
+                  .in(params.game_token)
+                  .emit("new_question", res.data.data.getQuestion);
+              }
+            })
+            .catch((err) => {
+              console.log(err.response.data.errors);
+            });
+        }
       })
       .catch((err) => {
         io.sockets
           .in(params.game_token)
           .emit("error", err.response.data.errors[0]);
       });
-
   });
 
   socket.on("disconnect", () => {

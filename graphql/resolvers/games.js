@@ -3,7 +3,8 @@ const bcrypt = require("bcryptjs");
 const Game = require("../../models/game");
 const User = require("../../models/user");
 const Question = require("../../models/question");
-const { transformGame } = require("./merge");
+const Country = require("../../models/country");
+const { transformGame, transformQuestion } = require("./merge");
 var random = require("mongoose-simple-random");
 
 module.exports = {
@@ -44,8 +45,6 @@ module.exports = {
       /*game.users.push(creator);*/
 
       const number = await Question.countDocuments();
-      let randoms = [];
-      let num = 5;
       while (true) {
         let random = Math.floor(Math.random() * number);
         let question = await Question.findOne().skip(random);
@@ -130,6 +129,36 @@ module.exports = {
         return "Incorrect Game PIN";
       }
       return !!game.creator._id.equals(user._id);
+    }catch(err){
+      throw err;
+    }
+  },
+  getQuestion: async({game_token}) => {
+    try{
+      const game = await Game.findOne({uniq_token: game_token});
+      if(game.current_question == 5){
+        throw new Error("Game Ended");
+      }
+      const question = await Question.findById(game.questions[game.current_question]);
+      const answer = await Country.findById(question.answer);
+      const number = await Country.countDocuments();
+      let countries = [];
+      while (true) {
+        let random = Math.floor(Math.random() * number);
+        let country = await Country.findOne().skip(random);
+        if(country._id.equals(answer._id)){
+          continue;
+        }
+        countries.push(country);
+        if (countries.length == 3) {
+          break;
+        }
+      }
+      countries.push(answer);
+      game.current_question++;
+      await game.save();
+
+      return {question_text: question.text, question_id: question._id, countries: countries.sort(()=>Math.random() - 0.5)}
     }catch(err){
       throw err;
     }

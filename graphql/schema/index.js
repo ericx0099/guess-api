@@ -55,7 +55,12 @@ module.exports = buildSchema(`
             token: String!
             tokenExpiration: Int!
         }
-    
+        
+        type newQuestion {
+            question_text: String!
+            question_id: ID!
+            countries: [Country!]!
+        }
         input GameInput{
             uniq_token: String!
         }
@@ -100,6 +105,7 @@ module.exports = buildSchema(`
             joinGame(user_id: String!, game_token: String!): Game!
             users: [User!]!
             canStart(user_id: String!, game_token: String!): Boolean!
+            getQuestion(game_token: String!): newQuestion!
         }
         
         type RootMutation{
