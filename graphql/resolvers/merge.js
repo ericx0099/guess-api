@@ -99,7 +99,7 @@ const transformGame = (game) => {
     updatedAt: new Date(game._doc.updatedAt).toISOString(),
     creator: user.bind(this, game._doc.creator),
     questions: questions.bind(this, game._doc.questions),
-    answers: answers.bind(this, game._doc.answer),
+    answers: answers.bind(this, game._doc.answers),
     users: users.bind(this, game._doc.users),
   };
 };

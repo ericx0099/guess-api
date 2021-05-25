@@ -4,6 +4,7 @@ const Game = require("../../models/game");
 const User = require("../../models/user");
 const Question = require("../../models/question");
 const Country = require("../../models/country");
+const Answer = require("../../models/answer");
 const { transformGame, transformQuestion } = require("./merge");
 var random = require("mongoose-simple-random");
 
@@ -87,66 +88,86 @@ module.exports = {
     try {
       const game = await Game.findOne({ uniq_token: token });
       if (!game) {
-        return "Unknown PIN"
-      }else{
-        return transformGame(game)
+        return "Unknown PIN";
+      } else {
+        return transformGame(game);
       }
-
     } catch (err) {
       throw err;
     }
   },
-  joinGame: async ({user_id, game_token}) => {
-    try{
+  joinGame: async ({ user_id, game_token }) => {
+    try {
       const user = await User.findById(user_id);
-      if(!user){
+      if (!user) {
         throw new Error("User not found");
       }
-      const game = await Game.findOne({uniq_token: game_token});
-      if(!game){
+      const game = await Game.findOne({ uniq_token: game_token });
+      if (!game) {
         return "Incorrect Game PIN";
       }
 
       game.users.push(user);
-      user.games.push(game)
+      user.games.push(game);
       const res = await game.save();
       await user.save();
 
       return transformGame(res);
-
-    }catch(err){
+    } catch (err) {
       throw err;
     }
   },
-  canStart: async({user_id, game_token}) => {
-    try{
+  canStart: async ({ user_id, game_token }) => {
+    try {
       const user = await User.findById(user_id);
-      if(!user){
+      if (!user) {
         throw new Error("User not found");
       }
-      const game = await Game.findOne({uniq_token: game_token});
-      if(!game){
+      const game = await Game.findOne({ uniq_token: game_token });
+      if (!game) {
         return "Incorrect Game PIN";
       }
       return !!game.creator._id.equals(user._id);
-    }catch(err){
+    } catch (err) {
       throw err;
     }
   },
-  getQuestion: async({game_token}) => {
-    try{
-      const game = await Game.findOne({uniq_token: game_token});
-      if(game.current_question == 5){
+  getAnswerPoints: async ({ game_id, game_token }) => {
+    try {
+      const query = {
+        query: `
+          query{
+            game(token: "${game_token}"){
+              answers{
+                points
+                user{
+                  _id
+                }
+              }
+            }
+          }
+        `,
+      };
+    } catch (err) {
+      throw err;
+    }
+  },
+  getQuestion: async ({ game_token }) => {
+    try {
+      const game = await Game.findOne({ uniq_token: game_token });
+      if (game.current_question == 5) {
         throw new Error("Game Ended");
       }
-      const question = await Question.findById(game.questions[game.current_question]);
+      const question = await Question.findById(
+        game.questions[game.current_question]
+      );
       const answer = await Country.findById(question.answer);
       const number = await Country.countDocuments();
       let countries = [];
       while (true) {
         let random = Math.floor(Math.random() * number);
         let country = await Country.findOne().skip(random);
-        if(country._id.equals(answer._id)){
+        if (country._id.equals(answer._id)) {
           continue;
         }
         countries.push(country);
@@ -154,13 +175,44 @@ module.exports = {
           break;
         }
       }
+      let players;
+      if(game.answers.length>0){
+        console.log(1);
+        players = await Promise.all(game.users.map( async function (u) {
+          let user;
+          let points = await Promise.all(game.answers.forEach(
+              async function (a) {
+                user = await User.findById(u);
+                let answer = await Answer.findById(a);
+                if (answer.user.equals(u._id)) {
+                  points = points + answer.points;
+                }
+              }
+          ));
+          return { username: user.username, points: points };
+        }));
+      }else{
+        players =await Promise.all(game.users.map(async function(u){
+          let user = await User.findById(u);
+          return {username: user.username, points: 0}
+        }));
+
+      }
+
+      console.log(players);
+
       countries.push(answer);
       game.current_question++;
       await game.save();
 
-      return {question_text: question.text, question_id: question._id, countries: countries.sort(()=>Math.random() - 0.5)}
-    }catch(err){
+      return {
+        question_text: question.text,
+        question_id: question._id,
+        countries: countries.sort(() => Math.random() - 0.5),
+        players: players
+      };
+    } catch (err) {
       throw err;
     }
-  }
+  },
 };

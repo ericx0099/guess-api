@@ -22,7 +22,8 @@ const answerSchema = new Schema({
   },
   points: {
     type: Number,
-    required: true
+    required: true,
+    default: 0
   }
 });
 

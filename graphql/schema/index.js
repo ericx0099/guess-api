@@ -60,6 +60,7 @@ module.exports = buildSchema(`
             question_text: String!
             question_id: ID!
             countries: [Country!]!
+            players : [User]!
         }
         input GameInput{
             uniq_token: String!

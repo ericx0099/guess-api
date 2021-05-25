@@ -8,7 +8,8 @@ const graphQLResolvers = require("./graphql/resolvers/index");
 const isAuth = require("./middleware/is-auth");
 const http = require("http").createServer();
 const app = express();
-
+const Country = require("./models/country");
+const Question = require("./models/question");
 const socketServer = require("http").Server(app);
 const io = require("socket.io")(socketServer, {
   cors: { origin: "*", methods: ["GET", "POST"] },
@@ -117,6 +118,10 @@ io.on("connection", (socket) => {
                             name
                             _id
                         }
+                        players{
+                          username
+                          points
+                        }
                     }
                 }
             `,
@@ -142,6 +147,38 @@ io.on("connection", (socket) => {
       });
   });
 
+  socket.on("submit-answer", async (params) => {
+    let points = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 0];
+    let the_points =
+      points[params.time / 10] + Math.floor(Math.random() * 5) + 1;
+    /*    */
+    let question = await Question.findById(params.question);
+    //  let correct_answer = await Country.findById(question.answer);
+
+    if (!question.answer.equals(params.answer)) {
+      io.sockets.in(params.game_token).emit("answer-response", 1);
+    } else {
+      io.sockets.in(params.game_token).emit("answer-response", 2);
+    }
+    const mutation = {
+      query: `
+       mutation{
+         createAnswer(answerInput: {answer: "${params.answer}", question: "${params.question}", user: "${params.userId}", game: "${params.game_token}", points: ${the_points}}){
+          _id
+        }
+       }
+      `,
+    };
+    axios
+      .post("http://localhost:3000/api", mutation)
+      .then((res) => {
+        console.log(res.data.data);
+      })
+      .catch((err) => {
+        console.log(err.response.data.errors);
+      });
+  });
+
   socket.on("disconnect", () => {
     console.log("disconnected");
   });
@@ -158,5 +195,5 @@ mongoose
     app.listen(3000);
   })
   .catch((err) => {
-    console.log(err);
+    console.log(err.response.data.errors);
   });

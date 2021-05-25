@@ -20,17 +20,17 @@ module.exports = {
         }
     },
     createAnswer: async (args, req) =>  {
-        if(!req.isAuth){
+     /*   if(!req.isAuth){
             throw new Error("Unauthenticated");
-        }
+        }*/
         let createdAnswer;
         try{
             const user = await User.findById(args.answerInput.user);
             const question = await Question.findById(args.answerInput.question);
             const answer = await Country.findById(args.answerInput.answer);
-            const game = await Game.findById(args.answerInput.game);
+            var game = await Game.findOne({uniq_token:args.answerInput.game });
 
-            const newAnswer = new Answer({
+            const new_answer = new Answer({
                 answer: answer,
                 question: question,
                 game: game,
@@ -38,7 +38,7 @@ module.exports = {
                 points: args.answerInput.points
             });
 
-            const result = newAnswer.save();
+            const result = await new_answer.save();
             createdAnswer = transformAnswer(result);
             game.answers.push(result);
             user.answers.push(result);
