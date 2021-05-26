@@ -154,6 +154,7 @@ module.exports = {
   },
   getQuestion: async ({ game_token }) => {
     try {
+
       const game = await Game.findOne({ uniq_token: game_token });
       if (game.current_question == 5) {
         throw new Error("Game Ended");
@@ -161,6 +162,7 @@ module.exports = {
       const question = await Question.findById(
         game.questions[game.current_question]
       );
+
       const answer = await Country.findById(question.answer);
       const number = await Country.countDocuments();
       let countries = [];
@@ -177,10 +179,11 @@ module.exports = {
       }
       let players;
       if(game.answers.length>0){
-        console.log(1);
         players = await Promise.all(game.users.map( async function (u) {
-          let user;
-          let points = await Promise.all(game.answers.forEach(
+          let user = null;
+          let points = 0;
+          console.log(game.answers);
+          let x = await Promise.all(game.answers.map(
               async function (a) {
                 user = await User.findById(u);
                 let answer = await Answer.findById(a);
@@ -189,6 +192,7 @@ module.exports = {
                 }
               }
           ));
+         console.log("points in => "+points);
           return { username: user.username, points: points };
         }));
       }else{
@@ -199,17 +203,18 @@ module.exports = {
 
       }
 
-      console.log(players);
+      console.log("players=>"+players);
 
       countries.push(answer);
       game.current_question++;
       await game.save();
-
+      console.log(typeof game.current_question);
       return {
         question_text: question.text,
         question_id: question._id,
         countries: countries.sort(() => Math.random() - 0.5),
-        players: players
+        players: players,
+        game_round: game.current_question
       };
     } catch (err) {
       throw err;

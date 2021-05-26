@@ -29,7 +29,7 @@ module.exports = {
             const question = await Question.findById(args.answerInput.question);
             const answer = await Country.findById(args.answerInput.answer);
             var game = await Game.findOne({uniq_token:args.answerInput.game });
-
+            console.log("pointssss=>"+args.answerInput.points);
             const new_answer = new Answer({
                 answer: answer,
                 question: question,
