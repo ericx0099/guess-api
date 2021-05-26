@@ -182,18 +182,11 @@ io.on("connection", (socket) => {
         console.log(res.data.data);
         if (res.data.data.createAnswer) {
           const game = await Game.findOne({ uniq_token: params.game_token });
-
           let answers = await Promise.all(
             game.answers.map(async function (a) {
-
               let answer = await Answer.findById(a);
-              console.log("answer q =" + answer.question);
-              console.log("params q =" + params.question);
               if (answer.question.equals(params.question)) {
-                console.log("yesssss");
                 return a;
-              }else{
-                  console.log("not yesssss");
               }
             })
           );
@@ -226,9 +219,19 @@ io.on("connection", (socket) => {
                   io.sockets
                     .in(params.game_token)
                     .emit("new_question", res.data.data.getQuestion);
-                } else {
-                  console.log("no next question");
-                  console.log(res.response.data.errors);
+                } else{
+                    const query = {
+                        query: `
+                            query{
+                                endGame(game_token: "${params.game_token}"){
+                                    players{
+                                        username
+                                        points
+                                    }
+                                }
+                            }
+                        `
+                    }
                 }
               })
               .catch((err) => {

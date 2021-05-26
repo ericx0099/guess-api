@@ -20,16 +20,12 @@ module.exports = {
         }
     },
     createAnswer: async (args, req) =>  {
-     /*   if(!req.isAuth){
-            throw new Error("Unauthenticated");
-        }*/
         let createdAnswer;
         try{
             const user = await User.findById(args.answerInput.user);
             const question = await Question.findById(args.answerInput.question);
             const answer = await Country.findById(args.answerInput.answer);
             var game = await Game.findOne({uniq_token:args.answerInput.game });
-            console.log("pointssss=>"+args.answerInput.points);
             const new_answer = new Answer({
                 answer: answer,
                 question: question,

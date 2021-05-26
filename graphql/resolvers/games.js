@@ -154,10 +154,34 @@ module.exports = {
   },
   getQuestion: async ({ game_token }) => {
     try {
-
       const game = await Game.findOne({ uniq_token: game_token });
       if (game.current_question == 5) {
-        throw new Error("Game Ended");
+        //throw new Error("Game Ended");
+
+        let players = await Promise.all(
+          game.users.map(async function (u) {
+            let user = await User.findById(u);
+            let points = 0;
+            let x = await Promise.all(
+              game.answers.map(async function (a) {
+                let answer = await Answer.findById(a);
+                if (answer.user.equals(user._id)) {
+                  points = points + answer.points;
+                }
+              })
+            );
+
+            return { username: user.username, points: points };
+          })
+        );
+        players.sort(compare);
+        return {
+          players: players.reverse(),
+          question_text: "end",
+          question_id: "end",
+          countries: [],
+          game_round: 0,
+        };
       }
       const question = await Question.findById(
         game.questions[game.current_question]
@@ -167,8 +191,9 @@ module.exports = {
       const number = await Country.countDocuments();
       let countries = [];
       while (true) {
-        let random = Math.floor(Math.random() * number);
-        let country = await Country.findOne().skip(random);
+        let country = await Country.findOne().skip(
+          Math.floor(Math.random() * number)
+        );
         if (country._id.equals(answer._id)) {
           continue;
         }
@@ -178,43 +203,50 @@ module.exports = {
         }
       }
       let players;
-      if(game.answers.length>0){
-        players = await Promise.all(game.users.map( async function (u) {
-          let user = null;
-          let points = 0;
-          console.log(game.answers);
-          let x = await Promise.all(game.answers.map(
-              async function (a) {
-                user = await User.findById(u);
+      if (game.answers.length > 0) {
+        players = await Promise.all(
+          game.users.map(async function (u) {
+            let user = await User.findById(u);
+            let points = 0;
+            console.log(game.answers);
+            let x = await Promise.all(
+              game.answers.map(async function (a) {
                 let answer = await Answer.findById(a);
-                if (answer.user.equals(u._id)) {
+                if (answer.user.equals(user._id)) {
                   points = points + answer.points;
                 }
-              }
-          ));
-         console.log("points in => "+points);
-          return { username: user.username, points: points };
-        }));
-      }else{
-        players =await Promise.all(game.users.map(async function(u){
-          let user = await User.findById(u);
-          return {username: user.username, points: 0}
-        }));
+              })
+            );
 
+            console.log("points in => " + points);
+            return { username: user.username, points: points };
+          })
+        );
+      } else {
+        players = await Promise.all(
+          game.users.map(async function (u) {
+            let user = await User.findById(u);
+            return { username: user.username, points: 0 };
+          })
+        );
       }
 
-      console.log("players=>"+players);
 
       countries.push(answer);
       game.current_question++;
       await game.save();
-      console.log(typeof game.current_question);
+     /* await players.sort((a,b) => (a.points > b.points) ? 1 : ((b.points > a.points) ? -1 : 0))*/
+      function compare(a, b) {
+
+        return a.points - b.points;
+      }
+      players.sort(compare);
       return {
         question_text: question.text,
         question_id: question._id,
         countries: countries.sort(() => Math.random() - 0.5),
-        players: players,
-        game_round: game.current_question
+        players: players.reverse(),
+        game_round: game.current_question,
       };
     } catch (err) {
       throw err;
