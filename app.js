@@ -39,7 +39,13 @@ app.use(
 );
 io.on("connection", (socket) => {
   const axios = require("axios");
-  socket.on("join-game", (params, callback) => {
+  socket.on("join-game",async  (params, callback) => {
+    const game = await Game.findOne({ uniq_token: params.game_token });
+    if (game.started) {
+      socket.emit("error", "Game already Started");
+
+      return;
+    }
     const queryGame = {
       query: `
         query{
@@ -117,6 +123,7 @@ io.on("connection", (socket) => {
                         question_text
                         question_id
                         game_round
+                        game_rounds
                         countries {
                             name
                             _id
@@ -133,9 +140,12 @@ io.on("connection", (socket) => {
             .post("http://localhost:3000/api", query)
             .then((res) => {
               if (res.data.data.getQuestion) {
+                console.log(res.data.data.getQuestion);
                 io.sockets
                   .in(params.game_token)
                   .emit("new_question", res.data.data.getQuestion);
+              }else{
+                console.log("eelseee");
               }
             })
             .catch((err) => {
@@ -160,11 +170,10 @@ io.on("connection", (socket) => {
     console.log("params_time=>" + params.time);
     console.log("the_points=>" + the_points);
     if (!question.answer.equals(params.answer)) {
-        socket.emit("answer-response", 1)
+      socket.emit("answer-response", 1);
       the_points = 0;
     } else {
-        socket.emit("answer-response", 2)
-
+      socket.emit("answer-response", 2);
     }
     const mutation = {
       query: `
@@ -175,7 +184,6 @@ io.on("connection", (socket) => {
        }
       `,
     };
-    console.log(mutation);
     axios
       .post("http://localhost:3000/api", mutation)
       .then(async (res) => {
@@ -190,8 +198,8 @@ io.on("connection", (socket) => {
               }
             })
           );
-          let filtered_answers = answers.filter(function( element ) {
-              return element !== undefined;
+          let filtered_answers = answers.filter(function (element) {
+            return element !== undefined;
           });
           if (filtered_answers.length == game.users.length) {
             const query = {
@@ -200,6 +208,8 @@ io.on("connection", (socket) => {
                   getQuestion(game_token: "${params.game_token}"){
                       question_text
                       question_id
+                      game_round
+                      game_rounds
                       countries {
                           name
                           _id
@@ -219,9 +229,9 @@ io.on("connection", (socket) => {
                   io.sockets
                     .in(params.game_token)
                     .emit("new_question", res.data.data.getQuestion);
-                } else{
-                    const query = {
-                        query: `
+                } else {
+                  const query = {
+                    query: `
                             query{
                                 endGame(game_token: "${params.game_token}"){
                                     players{
@@ -230,8 +240,8 @@ io.on("connection", (socket) => {
                                     }
                                 }
                             }
-                        `
-                    }
+                        `,
+                  };
                 }
               })
               .catch((err) => {
@@ -248,7 +258,22 @@ io.on("connection", (socket) => {
         console.log(err);
       });
   });
+  socket.on("kick-user", async (params)=>{
+    const game = await Game.findOne({uniq_token: params.game_token});
+    game.users = game.users.map(function(u){
+      if(!u.equals(params.userId)){
+        return u;
+      }
+    });
+    game.users = game.users.filter(function (element) {
+      return element !== undefined;
+    });
 
+    io.sockets
+        .in(params.game_token)
+        .emit("kick-user", params.userId);
+
+  })
   socket.on("disconnect", () => {
     console.log("disconnected");
   });

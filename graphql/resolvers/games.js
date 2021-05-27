@@ -35,6 +35,7 @@ module.exports = {
     const game = new Game({
       uniq_token: rand,
       creator: req.userId,
+      started: false
     });
 
     let createdGame;
@@ -155,7 +156,7 @@ module.exports = {
   getQuestion: async ({ game_token }) => {
     try {
       const game = await Game.findOne({ uniq_token: game_token });
-      if (game.current_question == 5) {
+      if (game.current_question == 6) {
         //throw new Error("Game Ended");
 
         let players = await Promise.all(
@@ -181,6 +182,7 @@ module.exports = {
           question_id: "end",
           countries: [],
           game_round: 0,
+          game_rounds: 0
         };
       }
       const question = await Question.findById(
@@ -208,7 +210,6 @@ module.exports = {
           game.users.map(async function (u) {
             let user = await User.findById(u);
             let points = 0;
-            console.log(game.answers);
             let x = await Promise.all(
               game.answers.map(async function (a) {
                 let answer = await Answer.findById(a);
@@ -218,7 +219,6 @@ module.exports = {
               })
             );
 
-            console.log("points in => " + points);
             return { username: user.username, points: points };
           })
         );
@@ -234,10 +234,12 @@ module.exports = {
 
       countries.push(answer);
       game.current_question++;
+      game.started = true;
+      console.log("game_round--"+game.current_question);
+      console.log("questions.length--"+game.questions.length)
       await game.save();
      /* await players.sort((a,b) => (a.points > b.points) ? 1 : ((b.points > a.points) ? -1 : 0))*/
       function compare(a, b) {
-
         return a.points - b.points;
       }
       players.sort(compare);
@@ -247,6 +249,7 @@ module.exports = {
         countries: countries.sort(() => Math.random() - 0.5),
         players: players.reverse(),
         game_round: game.current_question,
+        game_rounds: game.questions.length
       };
     } catch (err) {
       throw err;

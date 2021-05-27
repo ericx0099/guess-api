@@ -35,6 +35,10 @@ const gameSchema = new Schema(
         ref: "Answer",
       },
     ],
+    started: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

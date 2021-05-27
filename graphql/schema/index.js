@@ -11,6 +11,7 @@ module.exports = buildSchema(`
             questions: [Question!]
             createdAt: String!
             updatedAt: String!
+            started: Boolean!
         }
         
         type User {
@@ -62,6 +63,7 @@ module.exports = buildSchema(`
             countries: [Country!]!
             players : [User]!
             game_round: Int!
+            game_rounds: Int!
         }
         input GameInput{
             uniq_token: String!
