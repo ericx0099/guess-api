@@ -98,7 +98,9 @@ module.exports = {
     }
   },
   joinGame: async ({ user_id, game_token }) => {
+
     try {
+      console.log(user_id);
       const user = await User.findById(user_id);
       if (!user) {
         throw new Error("User not found");
@@ -107,9 +109,16 @@ module.exports = {
       if (!game) {
         return "Incorrect Game PIN";
       }
-
-      game.users.push(user);
-      user.games.push(game);
+      let out = true;
+      game.users.forEach(function(u){
+        if(u.equals(user_id)){
+          out = false
+        }
+      });
+      if(out){
+        game.users.push(user);
+        user.games.push(game);
+      }
       const res = await game.save();
       await user.save();
 

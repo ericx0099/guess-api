@@ -12,6 +12,7 @@ const Country = require("./models/country");
 const Question = require("./models/question");
 const Answer = require("./models/answer");
 const Game = require("./models/game");
+const User = require("./models/user");
 const socketServer = require("http").Server(app);
 const io = require("socket.io")(socketServer, {
   cors: { origin: "*", methods: ["GET", "POST"] },
@@ -39,11 +40,11 @@ app.use(
 );
 io.on("connection", (socket) => {
   const axios = require("axios");
-  socket.on("join-game",async  (params, callback) => {
+
+  socket.on("join-game", async (params, callback) => {
     const game = await Game.findOne({ uniq_token: params.game_token });
     if (game.started) {
       socket.emit("error", "Game already Started");
-
       return;
     }
     const queryGame = {
@@ -60,7 +61,8 @@ io.on("connection", (socket) => {
       .post("http://localhost:3000/api", queryGame)
       .then((res) => {
         if (res.data.data.gameByToken) {
-          socket.join(params.game_token);
+          let rooms = [params.game_token, params.user_id];
+          socket.join(rooms);
         } else {
           socket.emit("error", "Game not found");
           error = true;
@@ -81,6 +83,7 @@ io.on("connection", (socket) => {
                 }    
                 users{
                     username
+                    _id
                 }
             }
         }
@@ -104,7 +107,19 @@ io.on("connection", (socket) => {
     //  socket.broadcast.to(params.game_token).emit('new_player');
   });
 
-  socket.on("start-game", (params) => {
+  socket.on("start-game", async (params) => {
+    const game = await Game.findOne({ uniq_token: params.game_token });
+    console.log("before=>");
+    console.log(game.users);
+    for (var i = 0; i < game.users.length; i++){
+      if (!io.sockets.adapter.rooms[game.users[i]]) {
+        game.users.splice(i,game.users.indexOf(game.users[i]));
+        console.log("this user disconnected");
+      }
+    }
+    console.log("after=>")
+    console.log(game.users);
+    await game.save();
     const query = {
       query: `
         query{
@@ -144,7 +159,7 @@ io.on("connection", (socket) => {
                 io.sockets
                   .in(params.game_token)
                   .emit("new_question", res.data.data.getQuestion);
-              }else{
+              } else {
                 console.log("eelseee");
               }
             })
@@ -258,22 +273,25 @@ io.on("connection", (socket) => {
         console.log(err);
       });
   });
-  socket.on("kick-user", async (params)=>{
-    const game = await Game.findOne({uniq_token: params.game_token});
-    game.users = game.users.map(function(u){
-      if(!u.equals(params.userId)){
-        return u;
-      }
-    });
-    game.users = game.users.filter(function (element) {
-      return element !== undefined;
-    });
+  socket.on("kick-user", async (params) => {
+    console.log("KICKING USER");
+    const game = await Game.findOne({ uniq_token: params.game_token });
 
-    io.sockets
-        .in(params.game_token)
-        .emit("kick-user", params.userId);
-
-  })
+    let users = [];
+    let usersPopulated = [];
+    let promise = await Promise.all(
+      game.users.map(async function (u) {
+        if (!u.equals(params.userId)) {
+          users.push(u);
+          usersPopulated.push(await User.findById(u));
+        }
+      })
+    );
+    game.users = users;
+    await game.save();
+    io.sockets.in(params.game_token).emit("user-kicked", usersPopulated);
+    io.sockets.in(params.userId).emit("uniq_self_kick", params.userId);
+  });
   socket.on("disconnect", () => {
     console.log("disconnected");
   });
