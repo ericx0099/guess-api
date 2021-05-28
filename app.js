@@ -155,6 +155,7 @@ io.on("connection", (socket) => {
             .post("http://localhost:3000/api", query)
             .then((res) => {
               if (res.data.data.getQuestion) {
+            /*    socket.emit(new_question,res.data.data.getQuestion);*/
                 io.sockets
                   .in(params.game_token)
                   .emit("new_question", res.data.data.getQuestion);
@@ -242,7 +243,9 @@ io.on("connection", (socket) => {
         .post("http://localhost:3000/api", query)
         .then((res) => {
           if (res.data.data.getQuestion) {
-            socket.emit('new_question',res.data.data.getQuestion)
+            io.sockets
+                .in(params.userId)
+                .emit("new_question", res.data.data.getQuestion);
 
           } else {
             const query = {

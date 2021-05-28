@@ -264,11 +264,10 @@ module.exports = {
           if(i == game.user_rounds.length){
             continue;
           }
-          if(game.user_rounds[0].round == game.user_rounds[i].round){
+          if(game.user_rounds[0].round != game.user_rounds[i].round){
             a = true;
-          }else{
-            a = false
             break;
+
           }
         }
         if(a && game.user_rounds[0].round == game.current_question+1){
