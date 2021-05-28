@@ -39,6 +39,9 @@ const gameSchema = new Schema(
       type: Boolean,
       default: false,
     },
+      user_rounds: {
+        type: Array,
+      }
   },
   { timestamps: true }
 );

@@ -162,12 +162,11 @@ module.exports = {
       throw err;
     }
   },
-  getQuestion: async ({ game_token }) => {
+  getQuestion: async ({ game_token, userId }) => {
     try {
       const game = await Game.findOne({ uniq_token: game_token });
       if (game.current_question == 6) {
         //throw new Error("Game Ended");
-
         let players = await Promise.all(
           game.users.map(async function (u) {
             let user = await User.findById(u);
@@ -180,7 +179,6 @@ module.exports = {
                 }
               })
             );
-
             return { username: user.username, points: points };
           })
         );
@@ -194,8 +192,14 @@ module.exports = {
           game_rounds: 0
         };
       }
+      console.log("lol");
+      let index = game.user_rounds.findIndex(x => x.user.equals(userId));
+      console.log(game.user_rounds);
+      console.log(index);
+      game.user_rounds[index].round++
+      console.log("lul")
       const question = await Question.findById(
-        game.questions[game.current_question]
+        game.questions[game.user_rounds[index].round]
       );
 
       const answer = await Country.findById(question.answer);
@@ -242,10 +246,24 @@ module.exports = {
 
 
       countries.push(answer);
-      game.current_question++;
+      /*game.current_question++;*/
+      if(game.current_question == 0){
+        game.current_question++;
+      }else{
+        let a = false;
+        console.log("here");
+        for(let i = 0; i<game.user_rounds.length-1;i++){
+          if(!(game.user_rounds[0].round == game.user_rounds[i].round && game.user_rounds[0].round == game.current_question +1)){
+            a = true;
+            break;
+          }
+        }
+        console.log("passed");
+        if(!a){
+          game.current_question++;
+        }
+      }
       game.started = true;
-      console.log("game_round--"+game.current_question);
-      console.log("questions.length--"+game.questions.length)
       await game.save();
      /* await players.sort((a,b) => (a.points > b.points) ? 1 : ((b.points > a.points) ? -1 : 0))*/
       function compare(a, b) {
@@ -257,7 +275,7 @@ module.exports = {
         question_id: question._id,
         countries: countries.sort(() => Math.random() - 0.5),
         players: players.reverse(),
-        game_round: game.current_question,
+        game_round: game.user_rounds[index].round,
         game_rounds: game.questions.length
       };
     } catch (err) {

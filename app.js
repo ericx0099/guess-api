@@ -96,8 +96,6 @@ io.on("connection", (socket) => {
             io.sockets
               .in(params.game_token)
               .emit("new_player", res.data.data.joinGame);
-          } else {
-            console.log(res);
           }
         })
         .catch((err) => {
@@ -109,16 +107,13 @@ io.on("connection", (socket) => {
 
   socket.on("start-game", async (params) => {
     const game = await Game.findOne({ uniq_token: params.game_token });
-    console.log("before=>");
-    console.log(game.users);
     for (var i = 0; i < game.users.length; i++){
       if (!io.sockets.adapter.rooms[game.users[i]]) {
-        game.users.splice(i,game.users.indexOf(game.users[i]));
-        console.log("this user disconnected");
+        game.users.splice(i,game.users.indexOf(game.users[i-1]));
+        console.log(game.users[i]);
+        console.log("user disconnected");
       }
     }
-    console.log("after=>")
-    console.log(game.users);
     await game.save();
     const query = {
       query: `
@@ -129,12 +124,16 @@ io.on("connection", (socket) => {
     };
     axios
       .post("http://localhost:3000/api", query)
-      .then((res) => {
+      .then( async (res) => {
         if (res.data.data.canStart) {
+          game.user_rounds = game.users.map(function(user){
+            return {user: user, round:0}
+          });
+          await game.save();
           const query = {
             query: `
                 query{
-                    getQuestion(game_token: "${params.game_token}"){
+                    getQuestion(game_token: "${params.game_token}", userId: "${params.user_id}"){
                         question_text
                         question_id
                         game_round
@@ -155,12 +154,9 @@ io.on("connection", (socket) => {
             .post("http://localhost:3000/api", query)
             .then((res) => {
               if (res.data.data.getQuestion) {
-                console.log(res.data.data.getQuestion);
                 io.sockets
                   .in(params.game_token)
                   .emit("new_question", res.data.data.getQuestion);
-              } else {
-                console.log("eelseee");
               }
             })
             .catch((err) => {
@@ -182,8 +178,6 @@ io.on("connection", (socket) => {
     /*    */
     let question = await Question.findById(params.question);
     //  let correct_answer = await Country.findById(question.answer);
-    console.log("params_time=>" + params.time);
-    console.log("the_points=>" + the_points);
     if (!question.answer.equals(params.answer)) {
       socket.emit("answer-response", 1);
       the_points = 0;
@@ -202,7 +196,7 @@ io.on("connection", (socket) => {
     axios
       .post("http://localhost:3000/api", mutation)
       .then(async (res) => {
-        console.log(res.data.data);
+
         if (res.data.data.createAnswer) {
           const game = await Game.findOne({ uniq_token: params.game_token });
           let answers = await Promise.all(
@@ -216,11 +210,17 @@ io.on("connection", (socket) => {
           let filtered_answers = answers.filter(function (element) {
             return element !== undefined;
           });
-          if (filtered_answers.length == game.users.length) {
-            const query = {
-              query: `
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  });
+  socket.on('get-question', async(params) => {
+    const query = {
+      query: `
               query{
-                  getQuestion(game_token: "${params.game_token}"){
+                  getQuestion(game_token: "${params.game_token}", userId: "${params.userId}"){
                       question_text
                       question_id
                       game_round
@@ -236,42 +236,31 @@ io.on("connection", (socket) => {
                   }
               }
           `,
-            };
-            axios
-              .post("http://localhost:3000/api", query)
-              .then((res) => {
-                if (res.data.data.getQuestion) {
-                  io.sockets
-                    .in(params.game_token)
-                    .emit("new_question", res.data.data.getQuestion);
-                } else {
-                  const query = {
-                    query: `
-                            query{
-                                endGame(game_token: "${params.game_token}"){
-                                    players{
-                                        username
-                                        points
-                                    }
-                                }
-                            }
-                        `,
-                  };
-                }
-              })
-              .catch((err) => {
-                console.log(err.response.data.errors);
-              });
+    };
+    axios
+        .post("http://localhost:3000/api", query)
+        .then((res) => {
+          if (res.data.data.getQuestion) {
+            socket.emit('new_question',res.data.data.getQuestion)
+
           } else {
-            console.log("length not equal");
+            const query = {
+              query: `
+                    query{
+                        endGame(game_token: "${params.game_token}"){
+                            players{
+                                username
+                                points
+                            }
+                        }
+                    }
+                `,
+            };
           }
-        } else {
-          console.log("answer is null");
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+        })
+        .catch((err) => {
+          console.log(err.response.data.errors);
+        });
   });
   socket.on("kick-user", async (params) => {
     console.log("KICKING USER");

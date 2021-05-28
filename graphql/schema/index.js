@@ -12,6 +12,11 @@ module.exports = buildSchema(`
             createdAt: String!
             updatedAt: String!
             started: Boolean!
+            user_rounds: [UserRounds]!
+        }
+        type UserRounds {
+            user: String!
+            points: Int!
         }
         
         type User {
@@ -109,7 +114,7 @@ module.exports = buildSchema(`
             joinGame(user_id: String!, game_token: String!): Game!
             users: [User!]!
             canStart(user_id: String!, game_token: String!): Boolean!
-            getQuestion(game_token: String!): newQuestion!
+            getQuestion(game_token: String!, userId: String!): newQuestion!
         }
         
         type RootMutation{
