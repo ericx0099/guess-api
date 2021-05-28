@@ -100,7 +100,6 @@ module.exports = {
   joinGame: async ({ user_id, game_token }) => {
 
     try {
-      console.log(user_id);
       const user = await User.findById(user_id);
       if (!user) {
         throw new Error("User not found");
@@ -165,6 +164,8 @@ module.exports = {
   getQuestion: async ({ game_token, userId }) => {
     try {
       const game = await Game.findOne({ uniq_token: game_token });
+      console.log("BEFORE ANYTING");
+      console.log(game.user_rounds[0]);
       if (game.current_question == 6) {
         //throw new Error("Game Ended");
         let players = await Promise.all(
@@ -192,16 +193,22 @@ module.exports = {
           game_rounds: 0
         };
       }
-      console.log("lol");
       let index = game.user_rounds.findIndex(x => x.user.equals(userId));
       console.log(game.user_rounds);
       console.log(index);
-      game.user_rounds[index].round++
-      console.log("lul")
-      const question = await Question.findById(
-        game.questions[game.user_rounds[index].round]
-      );
+      console.log("before->"+game.user_rounds[index].round);
 
+      var question;
+      if(game.current_question == 0){
+        question = await Question.findById(
+            game.questions[0]
+        );
+      }else{
+         question = await Question.findById(
+            game.questions[game.user_rounds[index].round-1]
+        );
+      }
+      console.log("owo");
       const answer = await Country.findById(question.answer);
       const number = await Country.countDocuments();
       let countries = [];
@@ -247,35 +254,56 @@ module.exports = {
 
       countries.push(answer);
       /*game.current_question++;*/
+
       if(game.current_question == 0){
         game.current_question++;
+        console.log("is0");
       }else{
         let a = false;
-        console.log("here");
-        for(let i = 0; i<game.user_rounds.length-1;i++){
-          if(!(game.user_rounds[0].round == game.user_rounds[i].round && game.user_rounds[0].round == game.current_question +1)){
+        for(let i = 0; i<game.user_rounds.length;i++){
+          if(i == game.user_rounds.length){
+            continue;
+          }
+          if(game.user_rounds[0].round == game.user_rounds[i].round){
             a = true;
+          }else{
+            a = false
             break;
           }
         }
-        console.log("passed");
-        if(!a){
+        if(a && game.user_rounds[0].round == game.current_question+1){
           game.current_question++;
+          console.log("game.current_question++");
         }
       }
+      console.log("tss");
       game.started = true;
-      await game.save();
-     /* await players.sort((a,b) => (a.points > b.points) ? 1 : ((b.points > a.points) ? -1 : 0))*/
+      game.user_rounds[index].round = game.user_rounds[index].round+1;
+      console.log("after->"+game.user_rounds[index].round);
+
+      game.markModified('user_rounds');
+      let res = await game.save();
+
+      console.log("res->"+res.user_rounds[index].round);
+
+      /* await players.sort((a,b) => (a.points > b.points) ? 1 : ((b.points > a.points) ? -1 : 0))*/
       function compare(a, b) {
         return a.points - b.points;
       }
       players.sort(compare);
+      let question_num_return;
+      if(game.current_question == 1){
+        question_num_return = 1
+      }else{
+        question_num_return = game.user_rounds[index].round-1
+      }
+      console.log("curr=>"+game.current_question);
       return {
         question_text: question.text,
         question_id: question._id,
         countries: countries.sort(() => Math.random() - 0.5),
         players: players.reverse(),
-        game_round: game.user_rounds[index].round,
+        game_round: question_num_return,
         game_rounds: game.questions.length
       };
     } catch (err) {

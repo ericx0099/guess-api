@@ -127,8 +127,9 @@ io.on("connection", (socket) => {
       .then( async (res) => {
         if (res.data.data.canStart) {
           game.user_rounds = game.users.map(function(user){
-            return {user: user, round:0}
+            return {user: user, round:1}
           });
+          console.log("CAN START");
           await game.save();
           const query = {
             query: `
