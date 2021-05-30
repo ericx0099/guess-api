@@ -140,7 +140,9 @@ module.exports = {
           games.push(game);
         }
       }
+
       let return_games = games.map(function(g){
+        console.log(g);
         return {_id: g._id, createdAt:new Date(g.createdAt).toISOString()}
       });
 

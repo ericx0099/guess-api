@@ -108,6 +108,8 @@ io.on("connection", (socket) => {
 
   socket.on("start-game", async (params) => {
     const game = await Game.findOne({ uniq_token: params.game_token });
+/*    console.log("before game start");
+    console.log(game.users);
     for (var i = 0; i < game.users.length; i++){
       if (!io.sockets.adapter.rooms[game.users[i]]) {
         game.users.splice(i,game.users.indexOf(game.users[i-1]));
@@ -115,6 +117,8 @@ io.on("connection", (socket) => {
         console.log("user disconnected");
       }
     }
+    console.log("after game start");
+    console.log(game.users);*/
     await game.save();
     const query = {
       query: `

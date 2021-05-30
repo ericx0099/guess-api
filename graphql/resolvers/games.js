@@ -98,13 +98,16 @@ module.exports = {
     }
   },
   joinGame: async ({ user_id, game_token }) => {
-
+    console.log("joining user");
     try {
       const user = await User.findById(user_id);
       if (!user) {
         throw new Error("User not found");
       }
       const game = await Game.findOne({ uniq_token: game_token });
+      console.log("a");
+      console.log(game.users);
+      console.log("b");
       if (!game) {
         return "Incorrect Game PIN";
       }
@@ -114,10 +117,20 @@ module.exports = {
           out = false
         }
       });
+
+
+
       if(out){
-        game.users.push(user);
-        user.games.push(game);
+        game.users.push(user._id);
+        user.games.push(game._id);
       }
+      if(game.users.length==0){
+        game.users.push(user._id);
+        user.games.push(game._id);
+      }
+      console.log("user_id"+user_id);
+      console.log(game.users);
+      console.log("---endjoin---");
       const res = await game.save();
       await user.save();
 
@@ -167,6 +180,7 @@ module.exports = {
       let index = game.user_rounds.findIndex(x => x.user.equals(userId));
       console.log("BEFORE ANYTING");
       console.log(game.user_rounds[0]);
+      console.log("index"+index);
       if (game.user_rounds[index].round == 6) {
         //throw new Error("Game Ended");
         let players = await Promise.all(

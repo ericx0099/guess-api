@@ -49,6 +49,24 @@ module.exports = {
     }catch(err){
       throw err;
     }
+  },
+  globalRanking: async({}) => {
+    try{
+      const users = await User.find();
+      function compare(a, b) {
+        return a.points - b.points;
+      }
+      users.sort(compare);
+      let finalUsers = [];
+      for(let i = users.length-1; i>users.length-11;i--){
+        if(users[i]){
+          finalUsers.push(users[i]);
+        }
+      }
+      //debug array and return
+    }catch(err){
+      throw err;
+    }
   }
 };
 
