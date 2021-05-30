@@ -70,7 +70,7 @@ module.exports = {
       const result = await game.save();
       createdGame = transformGame(result);
 
-      creator.games.push(result);
+
       await creator.save();
       return createdGame;
     } catch (err) {
@@ -167,7 +167,7 @@ module.exports = {
       let index = game.user_rounds.findIndex(x => x.user.equals(userId));
       console.log("BEFORE ANYTING");
       console.log(game.user_rounds[0]);
-      if (game.user_rounds[index].round == 7) {
+      if (game.user_rounds[index].round == 6) {
         //throw new Error("Game Ended");
         let players = await Promise.all(
           game.users.map(async function (u) {
@@ -181,9 +181,12 @@ module.exports = {
                 }
               })
             );
-            return { username: user.username, points: points };
+            user.points = user.points+points;
+            await user.save();
+            return { username: user.username, id:user._id, points: points };
           })
         );
+
         players.sort(compare);
         return {
           players: players.reverse(),
@@ -331,4 +334,26 @@ module.exports = {
       throw err;
     }
   },
+  gameResults: async({game_id}) => {
+    try{
+      const game = await Game.findById(game_id);
+      return await Promise.all(
+          game.users.map(async function (u) {
+            let user = await User.findById(u);
+            let points = 0;
+            let x = await Promise.all(
+                game.answers.map(async function (a) {
+                  let answer = await Answer.findById(a);
+                  if (answer.user.equals(user._id)) {
+                    points = points + answer.points;
+                  }
+                })
+            );
+            return { username: user.username, id:user._id, points: points };
+          })
+      );
+    }catch(err){
+      throw err;
+    }
+  }
 };

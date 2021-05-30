@@ -42,6 +42,7 @@ io.on("connection", (socket) => {
   const axios = require("axios");
 
   socket.on("join-game", async (params, callback) => {
+    console.log(params)
     const game = await Game.findOne({ uniq_token: params.game_token });
     if (game.started) {
       socket.emit("error", "Game already Started");
