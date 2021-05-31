@@ -45,5 +45,41 @@ module.exports = {
             throw err;
         }
 
+    },
+    nonAcceptedQ: async(args, req) => {
+        if(!req.isAuth) throw new Error("Unauthenticated");
+        const user = await User.findById(req.userId);
+        if(!user.isAdmin) throw new Error("Must be Administrator");
+        try{
+            return await Question.find({accepted: false});
+        }catch(err){
+            throw err
+        }
+    },
+    acceptQuestion: async({args, req})=>{
+        if(!req.isAuth) throw new Error("Unauthenticated");
+        const user = await User.findById(req.userId);
+        if(!user.isAdmin) throw new Error("Must be Administrator");
+        try{
+            let question = await Question.findById(args.question_id);
+            if(!question) throw new Error("Question not found");
+            question.accepted = true;
+            let res = await question.save();
+            return transformQuestion(res);
+        }catch(err){
+            throw err;
+        }
     }
+    /*acceptAll: async()=>{
+        try{
+            const questions = await Question.find();
+            for(let i = 0; i<questions.length-1; i++){
+                questions[i].accepted = true;
+                await questions[i].save();
+            }
+            return questions;
+        }catch(err){
+            throw err;
+        }
+    }*/
 }

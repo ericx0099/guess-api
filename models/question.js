@@ -21,6 +21,11 @@ const questionSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "Country",
     },
+    accepted: {
+      type: Boolean,
+      default: false,
+    },
+
   },
   {
     timestamps: true,

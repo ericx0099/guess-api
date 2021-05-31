@@ -53,7 +53,7 @@ module.exports = {
         let contains = false;
         if (game.questions.length > 0) {
           game.questions.forEach(function (q) {
-            if (q._id.equals(question._id)) contains = true;
+            if (q._id.equals(question._id) || !q.accepted) contains = true;
           });
         } else {
           game.questions.push(question);
