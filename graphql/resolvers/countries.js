@@ -63,7 +63,25 @@ module.exports = {
           finalUsers.push(users[i]);
         }
       }
-      //debug array and return
+      return finalUsers
+    }catch(err){
+      throw err;
+    }
+  },
+  countryRanking: async({country_id}) => {
+    try{
+      const users = await User.find({country:country_id});
+      function compare(a, b) {
+        return a.points - b.points;
+      }
+      users.sort(compare);
+      let finalUsers = [];
+      for(let i = users.length-1; i>users.length-11;i--){
+        if(users[i]){
+          finalUsers.push(users[i]);
+        }
+      }
+      return finalUsers
     }catch(err){
       throw err;
     }

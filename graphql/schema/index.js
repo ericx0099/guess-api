@@ -127,6 +127,8 @@ module.exports = buildSchema(`
             getQuestion(game_token: String!, userId: String!): newQuestion!
             lastGames: [returnLastGames!]!
             gameResults(game_id: String!): [resultsGame!]!
+            globalRanking: [User!]!
+            countryRanking(country_id: String!): [User!]!
         }
         
         type RootMutation{

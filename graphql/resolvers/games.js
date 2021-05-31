@@ -351,7 +351,7 @@ module.exports = {
   gameResults: async({game_id}) => {
     try{
       const game = await Game.findById(game_id);
-      return await Promise.all(
+      let results = await Promise.all(
           game.users.map(async function (u) {
             let user = await User.findById(u);
             let points = 0;
@@ -366,6 +366,10 @@ module.exports = {
             return { username: user.username, id:user._id, points: points };
           })
       );
+      function compare(a, b) {
+        return a.points - b.points;
+      }
+      return results.sort(compare).reverse()
     }catch(err){
       throw err;
     }
