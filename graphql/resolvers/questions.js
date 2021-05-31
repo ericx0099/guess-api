@@ -51,12 +51,16 @@ module.exports = {
         const user = await User.findById(req.userId);
         if(!user.isAdmin) throw new Error("Must be Administrator");
         try{
-            return await Question.find({accepted: false});
+            let questions = await Question.find({accepted: false});
+            return questions.map(function(q){
+                return transformQuestion(q)
+            });
+
         }catch(err){
             throw err
         }
     },
-    acceptQuestion: async({args, req})=>{
+    acceptQuestion: async(args, req)=>{
         if(!req.isAuth) throw new Error("Unauthenticated");
         const user = await User.findById(req.userId);
         if(!user.isAdmin) throw new Error("Must be Administrator");
@@ -66,6 +70,19 @@ module.exports = {
             question.accepted = true;
             let res = await question.save();
             return transformQuestion(res);
+        }catch(err){
+            throw err;
+        }
+    },
+    denyQuestion: async(args, req)=>{
+        if(!req.isAuth) throw new Error("Unauthenticated");
+        const user = await User.findById(req.userId);
+        if(!user.isAdmin) throw new Error("Must be Administrator");
+        try{
+            let question = await Question.findById(args.question_id);
+            if(!question) throw new Error("Question not found");
+            await Question.deleteOne({_id:question._id});
+            return true;
         }catch(err){
             throw err;
         }

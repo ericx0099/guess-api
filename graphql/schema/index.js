@@ -131,6 +131,7 @@ module.exports = buildSchema(`
             countryRanking(country_id: String!): [User!]!
             nonAcceptedQ: [Question!]!
             acceptQuestion(question_id: String!): Question!
+            denyQuestion(question_id: String!): Boolean!
            
         }
         
