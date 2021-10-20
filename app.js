@@ -42,7 +42,7 @@ io.on("connection", (socket) => {
   const axios = require("axios");
 
   socket.on("join-game", async (params, callback) => {
-    console.log(params)
+    console.log(params);
     const game = await Game.findOne({ uniq_token: params.game_token });
     if (game.started) {
       socket.emit("error", "Game already Started");
@@ -108,7 +108,7 @@ io.on("connection", (socket) => {
 
   socket.on("start-game", async (params) => {
     const game = await Game.findOne({ uniq_token: params.game_token });
-/*    console.log("before game start");
+    /*    console.log("before game start");
     console.log(game.users);
     for (var i = 0; i < game.users.length; i++){
       if (!io.sockets.adapter.rooms[game.users[i]]) {
@@ -129,10 +129,10 @@ io.on("connection", (socket) => {
     };
     axios
       .post("http://localhost:3000/api", query)
-      .then( async (res) => {
+      .then(async (res) => {
         if (res.data.data.canStart) {
-          game.user_rounds = game.users.map(function(user){
-            return {user: user, round:1}
+          game.user_rounds = game.users.map(function (user) {
+            return { user: user, round: 1 };
           });
           console.log("CAN START");
           await game.save();
@@ -160,7 +160,7 @@ io.on("connection", (socket) => {
             .post("http://localhost:3000/api", query)
             .then((res) => {
               if (res.data.data.getQuestion) {
-            /*    socket.emit(new_question,res.data.data.getQuestion);*/
+                /*    socket.emit(new_question,res.data.data.getQuestion);*/
                 io.sockets
                   .in(params.game_token)
                   .emit("new_question", res.data.data.getQuestion);
@@ -203,7 +203,6 @@ io.on("connection", (socket) => {
     axios
       .post("http://localhost:3000/api", mutation)
       .then(async (res) => {
-
         if (res.data.data.createAnswer) {
           const game = await Game.findOne({ uniq_token: params.game_token });
           let answers = await Promise.all(
@@ -223,7 +222,7 @@ io.on("connection", (socket) => {
         console.log(err);
       });
   });
-  socket.on('get-question', async(params) => {
+  socket.on("get-question", async (params) => {
     const query = {
       query: `
               query{
@@ -245,16 +244,15 @@ io.on("connection", (socket) => {
           `,
     };
     axios
-        .post("http://localhost:3000/api", query)
-        .then((res) => {
-          if (res.data.data.getQuestion) {
-            io.sockets
-                .in(params.userId)
-                .emit("new_question", res.data.data.getQuestion);
-
-          } else {
-            const query = {
-              query: `
+      .post("http://localhost:3000/api", query)
+      .then((res) => {
+        if (res.data.data.getQuestion) {
+          io.sockets
+            .in(params.userId)
+            .emit("new_question", res.data.data.getQuestion);
+        } else {
+          const query = {
+            query: `
                     query{
                         endGame(game_token: "${params.game_token}"){
                             players{
@@ -264,12 +262,12 @@ io.on("connection", (socket) => {
                         }
                     }
                 `,
-            };
-          }
-        })
-        .catch((err) => {
-          console.log(err.response.data.errors);
-        });
+          };
+        }
+      })
+      .catch((err) => {
+        console.log(err.response.data.errors);
+      });
   });
   socket.on("kick-user", async (params) => {
     console.log("KICKING USER");
@@ -304,6 +302,7 @@ mongoose
   )
   .then(() => {
     app.listen(3000);
+    console.log("connected");
   })
   .catch((err) => {
     console.log(err.response.data.errors);

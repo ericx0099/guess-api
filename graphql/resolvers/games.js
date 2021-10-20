@@ -25,6 +25,7 @@ module.exports = {
     }
     let rand;
     while (true) {
+
       rand = Math.floor(Math.random() * 10000000);
       const tryGame = await Game.findOne({ uniq_token: rand });
       if (!tryGame) {
@@ -44,24 +45,17 @@ module.exports = {
       if (!creator) {
         throw new Error("User not found!");
       }
-      /*game.users.push(creator);*/
-
       const number = await Question.countDocuments();
       while (true) {
-        let random = Math.floor(Math.random() * number);
-        let question = await Question.findOne().skip(random);
-        let contains = false;
-        if (game.questions.length > 0) {
-          game.questions.forEach(function (q) {
-            if (q._id.equals(question._id) || !q.accepted) contains = true;
-          });
-        } else {
-          game.questions.push(question);
-          contains = true;
+        let question = await Question.findOne().skip(Math.floor(Math.random() * number));
+        if(!question.accepted || game.questions.includes(question._id)){
+          continue;
         }
-        if (!contains) {
+        if (!game.questions.length > 0) {
           game.questions.push(question);
+          continue;
         }
+        game.questions.push(question);
         if (game.questions.length == 6) {
           break;
         }
